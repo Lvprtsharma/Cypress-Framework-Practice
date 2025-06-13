@@ -35,17 +35,27 @@ jobs:
           node-version: 20
           cache: 'npm'
       
-      # Step 3: Install dependencies
+      # Step 3: Debug directory structure
+      - name: Debug directory structure
+        run: |
+          pwd
+          ls -la
+          ls -la cypress/e2e/config/
+          cat cypress/e2e/config/constants.js
+
+      # Step 4: Install dependencies
       - name: Install dependencies
         run: |
           npm ci
-          ls -la cypress/e2e/config/
+          npm list cypress
 
-      # Step 4: Run cypress tests for chrome
+      # Step 5: Run cypress tests for chrome
       - name: Run cypress tests for chrome
-        run: npm run test:login
+        run: |
+          npx cypress verify
+          npm run test:login
 
-      # Step 5: Upload test results as artifacts
+      # Step 6: Upload test results as artifacts
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()

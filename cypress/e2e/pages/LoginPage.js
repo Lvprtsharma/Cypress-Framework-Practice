@@ -1,6 +1,6 @@
 import BasePage from "./BasePage";
 const routes = require('../config/routes');
-import { ENDPOINT_PREFIX } from "../config/constants";
+const { ENDPOINT_PREFIX } = require("../config/constants");
 
 class LoginPage extends BasePage{
 
