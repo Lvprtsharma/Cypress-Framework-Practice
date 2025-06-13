@@ -1,118 +1,49 @@
-name: Cypress Tests
+name: Cypress Test
 
+
+# event to trigger the workflow manually
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Test Environment'
-        required: true
-        default: 'local'
-        type: choice
-        options:
-          - local
-          - dev
-          - qa
-          - stage
-          - prod
-      browser:
-        description: 'Browser to run tests'
-        required: true
-        default: 'chrome'
-        type: choice
-        options:
-          - chrome
-          - firefox
-          - edge
-          - electron
-      tag:
-        description: 'Test tag to run'
-        required: true
-        default: '@regression'
-        type: choice
-        options:
-          - '@regression'
-          - '@smoke'
-          - '@Login'
-          - '@productData'
-          - '@Search'
-          - '@Wishlist'
-          - '@Cart'
+
+  push:
+    # Trigger the workflow when a push is made to the main branch
+    branches:
+      - main
+
+    # Trigger the workflow when a pull request is made to the main branch
+  pull_request:
+    branches:
+      - main
+  
 
 jobs:
-  cypress-run:
+  ui_test_chrome:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        containers: [1, 2, 3] # Run tests in parallel across 3 containers
-
+    
     steps:
+      # Step 1: Checkout code from the repository to the runner
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
+      # Step 2: Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.5.0'
-          cache: 'npm'
+          node-version: 20
+      
+      # Step 3: Install dependencies
+      - name: Install dependencies for cypress
+        run: npm install
 
-      - name: Install dependencies
-        run: npm ci
+      # Step 4: Run cypress tests for chrome
+      - name: Run cypress tests for chrome
+        run: npx cypress run --browser chrome
 
-      - name: Clear old reports
-        run: npm run report:pre
-
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-        with:
-          browser: ${{ github.event.inputs.browser || 'chrome' }}
-          headed: false
-          parallel: true
-          record: false
-          config: |
-            baseUrl: ${{ secrets.BASE_URL }}
-            video: true
-            screenshotOnRunFailure: true
-          env: |
-            environmentName=${{ github.event.inputs.environment || 'local' }}
-            grepTags=${{ github.event.inputs.tag || '@regression' }}
-        env:
-          # Add any additional environment variables here
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
-
-      - name: Merge JUnit reports
-        run: npm run report:post
-
-      - name: Upload test results
+      # Step 5: Upload test results as artifacts
+      - name: Upload test results as artifacts
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: cypress-results-${{ github.event.inputs.environment || 'local' }}
-          path: |
-            cypress/results/junit/combined-report.xml
-            cypress/results/cypress-mochawesome-reporter/
-            cypress/videos/
-            cypress/screenshots/
-
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v3
-        if: always()
-        with:
-          report_paths: 'cypress/results/junit/combined-report.xml'
-          require_tests: true
-          check_name: 'Test Report'
-
-      - name: Notify Slack
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        continue-on-error: true 
+          name: UI Test Report
+          path: cypress/reports
+          retention-days: 1
