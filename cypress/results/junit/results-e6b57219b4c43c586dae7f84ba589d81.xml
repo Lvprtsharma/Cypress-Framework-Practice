@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="7.712" tests="2" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-06-12T17:31:54" tests="0" file="cypress/e2e/tests/RegistrationTest.cy.js" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="Account Registration" timestamp="2025-06-12T17:31:54" tests="2" time="7.702" failures="0">
+    <testcase name="Account Registration should register the new user" time="6.314" classname="should register the new user">
+    </testcase>
+    <testcase name="Account Registration should validate the error messages for missing input fields" time="1.288" classname="should validate the error messages for missing input fields">
+    </testcase>
+  </testsuite>
+</testsuites>
