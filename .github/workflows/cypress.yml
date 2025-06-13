@@ -1,4 +1,4 @@
-name: Cypress Test
+name: Cypress Login Tests
 
 
 # event to trigger the workflow manually
@@ -18,16 +18,18 @@ on:
   
 
 jobs:
-  ui_test_chrome:
+  cypress-run:
     runs-on: ubuntu-latest
-    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+
     steps:
       # Step 1: Checkout code from the repository to the runner
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
+
       # Step 2: Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,25 +47,29 @@ jobs:
 
       # Step 4: Install dependencies
       - name: Install dependencies
-        run: |
-          npm ci
-          npm list cypress
+        run: npm ci
 
-      # Step 5: Run cypress tests for chrome
-      - name: Run cypress tests for chrome
-        run: |
-          npx cypress verify
-          npm run test:login
+      # Step 5: Run Cypress tests
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          browser: ${{ matrix.browser }}
+          spec: cypress/e2e/tests/LoginTest.cy.js
+          config: |
+            baseUrl: https://naveenautomationlabs.com/opencart/index.php
+            video: true
+            screenshotOnRunFailure: true
+          env: |
+            environmentName=local
+            grepTags=@Login
 
       # Step 6: Upload test results as artifacts
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: UI Test Report
+          name: cypress-results-${{ matrix.browser }}
           path: |
-            cypress/results/junit/combined-report.xml
-            cypress/results/cypress-mochawesome-reporter/
             cypress/videos/
             cypress/screenshots/
           retention-days: 1
